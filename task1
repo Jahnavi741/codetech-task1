@@ -1,0 +1,112 @@
+from datetime import datetime, timedelta
+
+class LibraryItem:
+    def _init_(self, title, author, category, item_type):
+        self.title = title
+        self.author = author
+        self.category = category
+        self.item_type = item_type
+        self.checked_out = False
+        self.due_date = None
+
+    def checkout(self):
+        if self.checked_out:
+            return False
+        self.checked_out = True
+        self.due_date = datetime.now() + timedelta(days=14)  # 2 weeks loan period
+        return True
+
+    def return_item(self):
+        self.checked_out = False
+        self.due_date = None
+
+    def is_overdue(self):
+        return self.checked_out and datetime.now() > self.due_date
+
+    def _str_(self):
+        status = "Checked out" if self.checked_out else "Available"
+        return f"{self.item_type}: {self.title} by {self.author}, {status}"
+
+
+class Library:
+    def _init_(self):
+        self.items = []
+        self.fines_per_day = 1.0  # fine amount per day
+
+    def add_item(self, title, author, category, item_type):
+        item = LibraryItem(title, author, category, item_type)
+        self.items.append(item)
+        print(f"Added {item_type}: {title} by {author}")
+
+    def search_items(self, keyword, field):
+        results = []
+        for item in self.items:
+            if field == "title" and keyword.lower() in item.title.lower():
+                results.append(item)
+            elif field == "author" and keyword.lower() in item.author.lower():
+                results.append(item)
+            elif field == "category" and keyword.lower() in item.category.lower():
+                results.append(item)
+        return results
+
+    def checkout_item(self, title):
+        for item in self.items:
+            if item.title.lower() == title.lower() and not item.checked_out:
+                if item.checkout():
+                    print(f"Checked out: {item.title}")
+                    return
+        print(f"Item not available: {title}")
+
+    def return_item(self, title):
+        for item in self.items:
+            if item.title.lower() == title.lower() and item.checked_out:
+                item.return_item()
+                print(f"Returned: {item.title}")
+                return
+        print(f"Item not found or not checked out: {title}")
+
+    def calculate_fines(self, title):
+        for item in self.items:
+            if item.title.lower() == title.lower() and item.is_overdue():
+                overdue_days = (datetime.now() - item.due_date).days
+                fine = overdue_days * self.fines_per_day
+                return fine
+        return 0
+
+    def list_items(self):
+        for item in self.items:
+            print(item)
+
+# Example usage
+if _name_ == "_main_":
+    library = Library()
+
+    # Adding items
+    library.add_item("The Great Gatsby", "F. Scott Fitzgerald", "Fiction", "Book")
+    library.add_item("National Geographic", "Various", "Magazine", "Magazine")
+    library.add_item("Inception", "Christopher Nolan", "Science Fiction", "DVD")
+
+    # Listing all items
+    print("\nLibrary Items:")
+    library.list_items()
+
+    # Searching for items
+    print("\nSearch Results:")
+    results = library.search_items("Great", "title")
+    for item in results:
+        print(item)
+
+    # Checking out an item
+    print("\nCheckout:")
+    library.checkout_item("The Great Gatsby")
+    library.list_items()
+
+    # Returning an item
+    print("\nReturn:")
+    library.return_item("The Great Gatsby")
+    library.list_items()
+
+    # Calculating fines
+    print("\nFines:")
+    fine = library.calculate_fines("The Great Gatsby")
+    print(f"Fine for 'The Great Gatsby': ${fine}")
